@@ -1,0 +1,60 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  uuid      String     @id @default(uuid()) @map("_id")
+  email     String     @unique
+  username  String     @unique @db.String()
+  password  String
+  createdAt DateTime   @default(now())
+
+  question  Question[]
+  answer    Answer[]
+  reply     ReplyAnswer[]
+}
+
+model Question {
+  uuid        String   @id @default(uuid()) @map("_id")
+  title       String   @db.String()
+  content     String
+  author      User     @relation(fields: [authorUuid], references: [uuid], onDelete: Cascade, onUpdate: Cascade)
+  authorUuid  String
+  answerCount Int      @default(0)
+  answer      Answer[]
+  createdAt   DateTime @default(now())
+}
+
+model Answer {
+  uuid         String   @id @default(uuid()) @map("_id")
+  content      String
+  authorUuid   String
+  questionUuid String
+  answerUuid   String  @default("")
+  createdAt    DateTime @default(now())
+
+  author       User     @relation(fields: [authorUuid], references: [uuid], onDelete: Cascade, onUpdate: Cascade)
+  question     Question @relation(fields: [questionUuid], references: [uuid], onDelete: Cascade, onUpdate: Cascade)
+  reply        ReplyAnswer[]
+}
+
+model ReplyAnswer {
+  uuid         String   @id @default(uuid()) @map("_id")
+  content      String
+  author       User     @relation(fields: [authorUuid], references: [uuid], onDelete: Cascade, onUpdate: Cascade)
+  authorUuid   String
+  answer       Answer   @relation(fields: [answerUuid], references: [uuid], onDelete: Cascade, onUpdate: Cascade)
+  answerUuid   String
+  createdAt    DateTime @default(now())
+}
